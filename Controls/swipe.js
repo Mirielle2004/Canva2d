@@ -45,13 +45,9 @@ class SwipeEvent {
     checkSwipe(startPoint, endPoint) {
         let newPos = endPoint.subtract(startPoint);
         if(Math.abs(newPos.x) > Math.abs(newPos.y)) {
-            if(newPos.x < 0) 
-                this.direction = "left";
-            else this.direction = "right";
+            this.direction = newPos.x < 0 ? "left" : "right;
         } else {
-            if(newPos.y < 0)
-                this.direction = "top";
-            else this.direction = "down";
+            this.direction = newPos.y < 0 ? "top" : "down;
         }
     }
 
