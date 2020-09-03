@@ -171,14 +171,13 @@ class Joystick {
                         angle: newPos.angle,
                         magnitude: newPos.magnitude,
                         direction: this.direction,
-                        origin: this.origin,
-                        client: new Vector(e.clientX, e.clientY),
-                        pos: this.pos,
+                        originX: this.origin.x,
+                        originY: this.origin.y,
+                        clientX: e.clientX,
+                        clientY: e.clientY,
                         isActive: this.isActive,
                     }
                 }));
-
-                this.checkDebug(console.log, `${~~(newPos.angle * 180 / Math.PI)} angle`);
             }
         });
 
@@ -239,11 +238,11 @@ class Joystick {
 
         this.canvas.addEventListener("touchend", () => {
             if(this.dynamic) {
-                this.isActive = false;
                 this.isFading = true;
             } else {
                 this.pos = new Vector(this.origin.x, this.origin.y);
             }
+            this.isActive = false;
             this.checkDebug(console.log, `Joystick waiting...`);
         });
     }
