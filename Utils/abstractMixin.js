@@ -1,3 +1,5 @@
+let CURRENT_CONTEXT;
+
 const AbstractBaseMixin = {
 
     debug: false,
