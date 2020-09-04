@@ -130,7 +130,7 @@ class Joystick {
             else this.direction = "right";
         } else {
             if(newPos.y < 0)
-                this.direction = "top";
+                this.direction = "up";
             else this.direction = "down";
         }
     }
