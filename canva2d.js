@@ -678,6 +678,8 @@ class Joystick {
                 this.pos.x = this.origin.x + Math.cos(newPos.angle) * radius;
                 this.pos.y = this.origin.y + Math.sin(newPos.angle) * radius;
 
+                this.checkSwipe(this.origin, new Vector(e.clientX, e.clientY));
+
                 this.canvas.dispatchEvent(new CustomEvent("joystick", {
                     detail: {
                         e: e,
@@ -725,6 +727,7 @@ class Joystick {
 
 
 Object.assign(Joystick.prototype, AbstractBaseMixin);
+
 
 /**
  * @description constructs tileMap on the canvas
