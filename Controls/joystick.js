@@ -226,9 +226,11 @@ class Joystick {
                         e: e,
                         angle: newPos.angle,
                         magnitude: newPos.magnitude,
-                        origin: this.origin,
-                        client: new Vector(e.touches[0].pageX, e.touches[0].pageY),
-                        pos: this.pos,
+                        direction: this.direction,
+                        originX: this.origin.x,
+                        originY: this.origin.y,
+                        clientX: e.clientX,
+                        clientY: e.clientY,
                         isActive: this.isActive,
                     }
                 }));
