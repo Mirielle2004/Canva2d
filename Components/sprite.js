@@ -72,17 +72,4 @@ class Sprite extends Component {
         }
     }
 
-    /**
-     * @description this method accepts a required argument relating to the current 2d rendering context
-     * @param {CanvasRenderingContext2D} context API to render sprite on the canvas
-     */
-    draw() {
-        this.animate();
-        CURRENT_CONTEXT.drawImage(this.img, 
-            this.src.x * this.tileW + this.spacing,
-            this.src.y * this.tileH + this.spacing,
-            this.tileW, this.tileH, this.x, this.y,
-            this.w, this.h);
-    }
-
 };
