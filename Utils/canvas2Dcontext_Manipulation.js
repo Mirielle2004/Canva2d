@@ -15,18 +15,9 @@ CanvasRenderingContext2D.prototype.__proto__ = {
         else this.clearRect(x, y, w, h);
     },
 
-    line(x1, y1, x2, y2, stroke) {
-        this.strokeStyle = stroke;
-        this.beginPath();
-        this.moveTo(x1, y1);
-        this.lineTo(x2, y2);
-        this.stroke();
-        this.closePath();
-    },
-
     /**
      * 
-     * @description Draws a customizable arc 
+     * @description Draws an arc made specially for joystick
      * @param {number} x centre point on the X-axis
      * @param {number} y centre point on the Y-axis
      * @param {number} radius radius of the circle
