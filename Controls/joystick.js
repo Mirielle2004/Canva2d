@@ -1,76 +1,52 @@
 /**
- * @description principal object that initializes and draw a joystick
- * 
- * It accepts a canvas element as it's first arguement then some keywords argument which are
- * {
- *      dynamic: joystick can appear anywhere in the world if true
- *      debug:   Keep track of the joystick's processes through messages in the console
- *      origin:  Vector containing information about the location of the joystick
- *      pos:     dynamic vector containing location's info of the movable joystick circle
- *      direction: direction of the joystick
- *      
- *      styles to the movable joystick circle:
- *          color
- *          lineWidth
- *          outlineColor
- *          innerRadius
- * 
- *      styles to the static joystick circle:
- *          backgroundColor
- *          backgroundLineWidth
- *          backgroundOutlineColor
- *          outterRadius
- *      
- *      isActive: says if the joystick is active
- *      isDisplay: says if the joystick is display
- *      isFading: says if the joystick is Fading
- * 
- *      timeSpan: accepts it value as arg.fadeIn and determine how long a joystick should stay before fading in
- * }
+ * Canva2D Joystick creator
  */
+class JoyStick {
 
-class Joystick {
     /**
      * 
      * @constructor
-     * @param {object} arg an object that accepts a predefined keys and map
-     * their values to the respected component of the joystick
+     * @param {object} params setup for joystick
      * 
      */
-    constructor(canvas, arg) {
+    constructor({canvas, x=0, y=0, dynamic=true, 
+    innerRadius=15, outerRadius=50, color="lightgray", 
+    lineWidth=4, outlineColor="#222", backgroundColor="none", 
+    backgroundOutlineColor="#222", backgroundLineWidth=4,
+    fadeTimeout=100, type="default"}) {
+        
         this.canvas = canvas;
         try {
             this.ctx = this.canvas.getContext("2d");
         } catch (error) {
             throw new Error("Joystick Failed to intialize CANVAS");
         }
-        this.dynamic = (arg.dynamic === false) ? false:true;
-        this.debug = arg.debug || false;
-        this.origin = new Vector(arg.x || 0, arg.y || 0);
-        this.pos = new Vector(arg.x || 0, arg.y || 0);
+        this.dynamic = (dynamic === false) ? false:true;
+        this.origin = new Vector(x, y);
+        this.pos = new Vector(x, y);
         this.direction = null;
 
         // styling
-        this.color = arg.color || "lightgray";
-        this.lineWidth = arg.lineWidth || 4;
-        this.outlineColor = arg.outlineColor || "#222";
-        this.innerRadius = arg.innerRadius || 15;
-        this.backgroundColor = arg.backgroundColor || "none";
-        this.backgroundOutlineColor = arg.backgroundOutlineColor || "#222";
-        this.backgroundLineWidth = arg.backgroundLineWidth || 4;
-        this.outerRadius = arg.outerRadius || 50;
+        this.color = color;
+        this.lineWidth = lineWidth;
+        this.outlineColor = outlineColor;
+        this.innerRadius = innerRadius;
+        this.backgroundColor = backgroundColor;
+        this.backgroundOutlineColor = backgroundOutlineColor;
+        this.backgroundLineWidth = backgroundLineWidth;
+        this.outerRadius = outerRadius;
         
         this.isActive = false;
         // animation
-        this.timeSpan = arg.fadeIn || 100;  
+        this.timeSpan = fadeTimeout;  
         this.timeSpanCounter = this.timeSpan;
         this.speedCounter = 0;
         this.isDisplay = false;
         this.isFading = false;
         this.alpha = 1;
 
-        if(arg.type !== undefined) {
-            switch(arg.type.toLowerCase()) {
+        if(type !== undefined) {
+            switch(type.toLowerCase()) {
 
                 case "touch":
                     this.touch();
@@ -81,18 +57,20 @@ class Joystick {
                     break;
     
                 case "default":
-                    this.mouse();
-                    this.touch();
+                    if ("ontouchstart" in window)
+                        this.touch();
+                    else if("onmousedown" in window)
+                        this.mouse();
                     break;
                 default:
-                    console.error(`${arg.type} types does not exists`);
+                    console.error(`${params.type} types does not exists`);
             };
         } else {
-            this.mouse();
-            this.touch();
+            if ("ontouchstart" in window)
+                this.touch();
+            else if("onmousedown" in window)
+                this.mouse();
         }
-
-        this.checkDebug(console.log, "Joystick Initialized successfully");
     }
 
     /**
@@ -109,7 +87,7 @@ class Joystick {
     }
 
     /**
-     * @description fade in the joystick when not active
+     * @description Add a fadeIn-Out effect to the Joystick
      */
     fadeIn() {
         if(this.isFading) {
@@ -122,6 +100,13 @@ class Joystick {
         }
     }
 
+    /**
+     * 
+     * @description checks in which direction the joystick is drag to
+     * @param {Vector} startPoint starting pos of the joystick movement
+     * @param {Vector} endPoint current pos of the joystick movement
+     * 
+     */
     checkSwipe(startPoint, endPoint) {
         let newPos = endPoint.subtract(startPoint);
         if(Math.abs(newPos.x) > Math.abs(newPos.y)) {
@@ -136,7 +121,7 @@ class Joystick {
     }
 
     /**
-     * Listen to joystic events with mouse
+     * @description joystick control with mouse
      */
     mouse() {
         this.canvas.addEventListener("mousedown", e => {
@@ -151,7 +136,6 @@ class Joystick {
                 this.alpha = 1;
             }
             this.isActive = true;
-            this.checkDebug(console.log, `Joystick Starting...`);
         });
 
         this.canvas.addEventListener("mousemove", e => {
@@ -183,18 +167,17 @@ class Joystick {
 
         this.canvas.addEventListener("mouseup", () => {
             if(this.dynamic) {
-                this.isActive = false;
                 this.isFading = true;
             } else {
                 this.pos = new Vector(this.origin.x, this.origin.y);
             }
             this.direction = null;
-            this.checkDebug(console.log, `Joystick waiting...`);
+            this.isActive = false;
         });
     }
 
     /**
-     * Listen to joystic events on touch
+     * @description joystick control with touch
      */
     touch() {
         this.canvas.addEventListener("touchstart", e => {
@@ -209,7 +192,6 @@ class Joystick {
                 this.alpha = 1;
             }
             this.isActive = true;
-            this.checkDebug(console.log, `Joystick Starting...`);
         });
 
         this.canvas.addEventListener("touchmove", e => {
@@ -237,7 +219,6 @@ class Joystick {
                     }
                 }));
                 e.preventDefault();
-                this.checkDebug(console.log, `${~~(newPos.angle * 180 / Math.PI)} angle`);
         });
 
         this.canvas.addEventListener("touchend", () => {
@@ -247,7 +228,6 @@ class Joystick {
                 this.pos = new Vector(this.origin.x, this.origin.y);
             }
             this.isActive = false;
-            this.checkDebug(console.log, `Joystick waiting...`);
         });
     }
 
@@ -266,7 +246,12 @@ class Joystick {
         }
         
     }
+
+    /**
+     * @description hides the joystick
+     */
+    hide() {
+        this.isDisplay = false;
+        this.isActive = false;
+    }
 }
-
-
-Object.assign(Joystick.prototype, AbstractBaseMixin);
