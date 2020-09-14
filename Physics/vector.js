@@ -1,10 +1,7 @@
 /**
- * @description Vector 
- * 
- * diff(n) = n2 - (n1 || 0)
- * 
- * @param {number} x diff(X) of the vector
- * @param {number} y diff(Y) of the vector
+ * @description 2D Vector's position of an object
+ * @param {Number} x position of an object on the X-axis
+ * @param {Number} y position of an object on the Y-axis
  * 
  */
 const Vector  = function(x, y) {
@@ -17,59 +14,73 @@ const Vector  = function(x, y) {
 
 Vector.prototype = {
     
-    // normalised the vector
+    /**
+     * @description scale vector's componet into their unit length
+     */
     normalise() {
-        let magnitude = this.magnitude();
-        this.x /= magnitude;
-        this.y /= magnitude;
+        this.x /= this.magnitude;
+        this.y /= this.magnitude;
     },
 
     /**
-     * @description vector's addition
-     * @param {number} vec The second vector to be added with this
-     * @returns {Vector}
+     * @description get the addition result of two vectors
+     * @param {Vector} v vector with a defined x, y
+     * 
      */
-    add(vec) {
-        let x = this.x + vec.x;
-        let y = this.y + vec.y;
+    add(v) {
+        let x = this.x + v.x;
+        let y = this.y + v.y;
         return new Vector(x, y);
     },
 
     /**
-     * @description vector's subtraction
-     * @param {number} vec The second vector to be subtracted from this
-     * @returns {Vector}
+     * @description get the subtraction result of two vectors
+     * @param {Vector} v vector with a defined x, y
+     * 
      */
-    subtract(vec) {
-        let x = this.x - vec.x;
-        let y = this.y - vec.y;
+    subtract(v) {
+        let x = this.x - v.x;
+        let y = this.y - v.y;
         return new Vector(x, y);
     },
 
     /**
-     * @description vector - scalar multiplication
-     * @param {number} scalar The scaling value
-     * @returns {Vector}
+     * @description get the product of two vectors
+     * @param {Vector} v vector with a defined x, y
+     * 
      */
-    multiply(vec) {
-        let x = this.x * vec.x;
-        let y = this.y * vec.y;
+    multiply(v) {
+        let x = this.x * v.x;
+        let y = this.y * v.y;
         return new Vector(x, y);
     },
 
     /**
-     * @description vector's dot product : shows how much of this is being projected to the other vector
-     * @param {number} vec The other vector to compared with
-     * @returns {number}
+     * @description get the dot product of two vectors
+     * @param {Vector} v vector with a defined x, y
+     * 
      */
-    dot(vec) {
-        let x = this.x * vec.x;
-        let y = this.y * vec.y;
+    dot(v) {
+        let x = this.x * v.x;
+        let y = this.y * v.y;
         return x + y;
+    }
+};
+
+
+
+Vector.__proto__ = {
+
+    getDist(v1, v2) {
+        let diff = new Vector(v2.x, v2.y)
+        .subtract({x: v1.x, y: v1.y});
+        return diff.magnitude;
     },
 
-    toString() {
-        return `Vector's object with the component X and Y as ${this.x}, ${this.y} respectively`;
+    getPolarCoord(angle = 0, magnitude = 0) {
+        let x = Math.cos(angle) * magnitude;
+        let y = Math.sin(angle) * magnitude;
+        return new Vector(x, y);
     }
-    
+
 };
