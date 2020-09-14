@@ -1,7 +1,8 @@
 /**
- * @description draw sprite on the canvas at a go
+ * @description draw sprite on the canvas
  */
 class Sprite extends Component {
+
     /**
      * @constructor
      * @param {Number} x position of the sprite on the X-axis
@@ -14,7 +15,7 @@ class Sprite extends Component {
      * 
      * */
     constructor(x, y, w, h, data, frame, delay=0) {
-        super(x, y, w, h);
+        super({x, y, w, h});
         this.data = data;   // TileSet Object
 
         this.img = this.data.img;
@@ -37,8 +38,9 @@ class Sprite extends Component {
     }
 
     /**
-     * 
+     * @description change animation's frame for the sprite
      * @param {String} key The name of the frame
+     * 
      */
     setFrame(key) {
         this.frameName = key;
@@ -68,8 +70,18 @@ class Sprite extends Component {
             if(this.frameIndex >= this.currentFrame.length)
                 this.frameIndex = 0;
             let value = this.currentFrame[this.frameIndex] - 1;
-            this.src = this.data.indexAt(value);
+            this.src = this.data.getIndex(value);
         }
+    }
+
+    draw(callback = null) {
+        this.animate();
+        if(typeof callback === "function") 
+            callback();
+        else 
+            CURRENT_CONTEXT.drawImage(this.img, this.src.x * this.data.w, 
+                this.src.y * this.data.h, this.data.w, this.data.h, this.x, 
+                this.y, this.w, this.h);
     }
 
 };
