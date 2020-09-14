@@ -1,27 +1,46 @@
+/**
+ * @description creates Tileset
+ */
 class TileSet {
-    constructor(arg) {
-        this.img = new Image();
-        this.img.src = arg.img;
-        this.w = arg.w;
-        this.h = arg.h;
-        this.col = arg.col;
-        this.row = arg.row;
-        this.spacing = arg.spacing || 0;
+    /**
+     * @constructor
+     * @param {Object} param0 setup for the tileset
+     * 
+     */
+    constructor({img=null, w=0, h=0, col=0, row=0, spacing=0, frame=[]}) {
+        if(img !== null) {
+            this.img = new Image();
+            this.img.src = img;
+        }
+        this.w = w;
+        this.h = h;
+        this.col = col;
+        this.row = row;
+        this.spacing = spacing;
         // frame for sprite animation
-        this.frame = arg.frame;
+        this.frame = frame;
     }
 
-    tileAt(pos) {
-        return new Vector(pos.x / this.w, pos.y / this.h);
-    }
-
-    indexAt(value) {
-        let x = ~~(value % this.col);
-        let y = ~~(value / this.col);
+    /**
+     * @description accepts a number and return it's 
+     * corresponding x,y coordinates on the tile image
+     * @param {Number} n value to get the index from
+     * 
+     */
+    getIndex(n) {
+        let x = ~~(n % this.col);
+        let y = ~~(n / this.col);
         return new Vector(x, y);
     }
 
-    valueAt(row, col) {
-        return row * this.col + col;
+    /**
+     * @description accpets a row/column number and 
+     * return the value of their tile.
+     * @param {Number} r row number
+     * @param {Number} c column number
+     * 
+     */
+    getTile(r, c) {
+        return r * this.col + c;
     }
 }
