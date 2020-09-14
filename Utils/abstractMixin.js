@@ -1,11 +1,11 @@
 let CURRENT_CONTEXT;
+let CURRENT_SCENE;
 
-const AbstractBaseMixin = {
-
-    debug: false,
-
-    checkDebug(callback, message) {
-        if(this.debug) callback(message);
+window.requestAnimationFrame = (function() {
+    return window.requestAnimationFrame || 
+    window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame ||
+    function(callback) {
+        window.setTimeout(callback, 1000/60);
     }
-
-};
+})();
