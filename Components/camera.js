@@ -1,7 +1,16 @@
 /**
- * @description 2D camera class mostly useful in tile-based game development.
+ * @description principal class for a 2D Camera's object
+ * 
  */
 class Camera extends Vector {
+    /**
+     * @constructor
+     * @param {Number} x starting position of the camera in the X-axis
+     * @param {Number} y starting position of the camera in the Y-axis
+     * @param {Number} w ending position of the camera in the X-axis
+     * @param {Number} h ending position of the camera in the Y-axis
+     * 
+     */
     constructor(x = 0, y = 0, w = 0, h = 0) {
         super(x, y);
         this.w = w;
@@ -30,6 +39,6 @@ class Camera extends Vector {
 
         // stop moving the camera if it is less than 0 or greater than the mapSize on the Y-axis
         this.y = Math.min(Math.max(0, this.y), Math.min(
-            this.maxDimension.y - this.h, Math.max(0, cameraPos.y))); 
+            this.maxDimension.y - this.h, Math.max(0, cameraPos.y)));
     }
 }
