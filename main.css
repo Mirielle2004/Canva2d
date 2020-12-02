@@ -1,0 +1,62 @@
+* {font-family: cursive}
+
+body {
+    margin: 0;
+    position: fixed;
+}
+
+#author {
+    text-align: center;
+    color: lightgray;
+    width: 100vw;
+    height: 90px;
+    background-color: blueviolet;
+    position: absolute;
+    bottom: 0;
+}
+
+#author > img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}
+
+#start-screen {
+    color: antiquewhite;
+    width: 90vw;
+    height: 50vh;
+    z-index: 1;
+    background-color: saddlebrown;
+    background-image: linear-gradient(to left, purple, brown);
+    position: absolute;
+    top: calc(50vh/2 - 10vh);
+    left: calc(5vw);
+    border-radius: 40px;
+    box-shadow: 5px 5px 5px 5px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+button {
+    margin: 10px;
+    padding: 10px;
+    width: 60px;
+    height: 60px;
+    font-weight: bolder;
+    border-radius: 10px;
+    outline: none;
+    border: none;
+    transition: 1s;
+}
+
+button:hover{
+    background-color: purple;
+    color: lightgray;
+    transform: scale(2);
+    border: 2px solid lightgray;
+}
+
+#gameData {
+    width: 100vw;
+    height: 100vh;
+    background-color: red;
+}
