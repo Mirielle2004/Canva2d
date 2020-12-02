@@ -33,7 +33,7 @@ const Canva2d = {
     
     host: "https://cdn.jsdelivr.net/gh/Mirielle2004/Canva2d@v0.0.6-alpha",
     
-    debug: true,
+    debug: false,
     
     cache: {},
 
