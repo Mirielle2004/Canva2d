@@ -1,9 +1,9 @@
 /**
  * 
  * @author Mirielle S.
- * name: Canva2D.js
+ * @name: Canva2D.js
  * @description A simple HTML5 Canvas game Engine
- * Last Revision: 1st Dec. 2020
+ * Last Revision: 3rd Dec. 2020
  * 
  * 
  * MIT License 
@@ -31,7 +31,7 @@ const Canva2d = {
     
     loaded: false,
     
-    host: "https://cdn.jsdelivr.net/gh/Mirielle2004/Canva2d@v0.0.7-alpha",
+    host: "https://cdn.jsdelivr.net/gh/Mirielle2004/Canva2d@v0.0.8-alpha",
     
     debug: false,
     

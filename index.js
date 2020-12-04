@@ -1,28 +1,15 @@
 let g = Canva2d;
-
-
-g.load([
-    'preloader',
-    'scene',
-    'launcher'
-
-]);
-
-
-let img = new Image();
-img.src = "example/img/hero.png";
-
-let aud = new Audio();
-aud.src = "example/french.mp3";
-
+g.load(['preloader','scene','launcher']);
 
 
 let assets = [
-    {img:img, src:img.src, name:"hero"},
-    {aud: aud, src:aud.src},
-//    {src:"jjj", type:"other"}
-]
+    {src:"example/img/hero.png", name:"hero1"},
+    {src:"example/img/hero.png", name:"hero2"},
+    {src: 'example/french.mp3', name:"music1"},
+    {src: 'example/french.mp3', name:"musi2"},
+];
 
+let img;
 
 
 const init = () => {
@@ -30,7 +17,8 @@ const init = () => {
     let config = {
         theme: "dark",
         width: innerWidth,
-        height: innerHeight
+        height: innerHeight,
+        timeOut: 3000,
     };
     
     let preload = new Preloader(assets);
@@ -39,8 +27,21 @@ const init = () => {
     scene.update = function() {
         let ctx = this.getContext();
         ctx.fillRect(100, 100, 100, 100);
+        ctx.drawImage(img, 200, 100);
     };
-    scene.start();
+    
+    Launcher(config).then(e => {
+        g.$("#loading").innerHTML = 'Loading...';
+        preload.load().then(e => {
+            g.$("#loading").style.display = 'none';
+            img = e.images[0].img;
+            scene.start();
+            console.log("touch the screen to play sound");
+            addEventListener("touchstart", ()=>{
+                e.audios[0].aud.play();
+            });
+        });
+    });
     
 };
 
