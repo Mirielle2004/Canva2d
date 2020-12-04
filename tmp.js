@@ -1,4 +1,4 @@
-let ctx, TSB, gSwipe;
+let ctx, TSB, gSwipe, preload;
 
 // Tetrominos common buffers
 const TETROMINOS_STATIC_BUFFER = {
@@ -9,10 +9,14 @@ const TETROMINOS_STATIC_BUFFER = {
     array: [],
     graphic: {
         stroke: "#222",
-        fill: "black",
+        fill: "white",
         array:[],
-        tetriminos:[[[1,1],[1,1]], [[0,1,0],[0,1,0],[1,1,0]],[[0,1,0],[0,1,1],[0,1,0]],[[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]],[[0,1,0],[0,1,0],[0,1,1]],[[1,1,0],[0,1,1],[0,0,0]],[[0,1,1],[1,1,0],[0,0,0]]]
+        tetriminos:[
+            [[1,1],[1,1]], [[0,1,0],[0,1,0],[1,1,0]],[[0,1,0],[0,1,1],[0,1,0]],[[0,1,0],[0,1,0],[0,1,0]],[[0,1,0],[0,1,0],[0,1,1]],[[1,1,0],[0,1,1],[0,0,0]],[[0,1,1],[1,1,0],[0,0,0]]
+        ]
     },
+    tileS: 20,
+    tileSize: 20,
     initArray() {
         for(let i=0; i < this.index.y; i++) {
             this.array.push(new Array(this.index.x).fill(0));
@@ -391,77 +395,44 @@ function swipeControl() {
         let _selected = TSB.active[0];
         let dir = this.data.direction;
         if(dir === 'up') {
-            // preload.getMedia("rotateMusic", "aud").play();
             _selected.rotate();
         } else TetriminosMove(dir, _selected);
     }
 };
 
 
-let preload = new Preloader([
-    {src:"example/img/block.png", name:"block"},
-    {src:"example/french.mp3", name:"rotateMusic"},
-    {src:"example/french.mp3", name:"bgMusic"},
-]);
 
-
-const init = () => {
-
-    TSB = TETROMINOS_STATIC_BUFFER;
-    TSB.init();
+addEventListener("load", () => {
     
-    let bgScene = new Scene(innerWidth, innerHeight, true);
-    bgScene.css({backgroundColor:TSB.graphic.fill});
-    bgScene.update = bgUpdate;
-    bgScene.start();
+
+
     
-    let scene = new Scene(innerWidth, innerHeight, true);
-    scene.css({position: "absolute",left: "0"});
-    ctx = scene.getContext();
-    scene.update = gameUpdate;
-    scene.start();
+    // addEventListener("keydown", e => {
+    //     if(game.isPlaying) {
+    //         let _selected = TSB.active[0];
+    //         if(e.keyCode === 37)
+    //             TetriminosMove("left", _selected);
+    //         else if (e.keyCode === 39)
+    //             TetriminosMove("right", _selected);
+    //         else if(e.keyCode === 38)
+    //             _selected.rotate(true);
+    //         else if(e.keyCode === 40)
+    //             TetriminosMove("down", _selected);
+    //         else if(e.keyCode === 65)
+    //             _selected.rotate(false);
+    //         else if(e.keyCode === 68)
+    //             _selected.rotate(true);
+    //     }
+    // });
     
-    gSwipe = new Swipe(scene.getScene(), "mouse");
-    gSwipe.onSwipeMove = swipeControl;
+    // Utils.$("#play").addEventListener("click", () => {
+    //        // audio.play();
+    //         game.start();
+            
+    //   });
 
-    addEventListener("keydown", e => {
-        if(game.isPlaying) {
-            let _selected = TSB.active[0];
-            if(e.keyCode === 37)
-                TetriminosMove("left", _selected);
-            else if (e.keyCode === 39)
-                TetriminosMove("right", _selected);
-            else if(e.keyCode === 38)
-                _selected.rotate(true);
-            else if(e.keyCode === 40)
-                TetriminosMove("down", _selected);
-            else if(e.keyCode === 65) {
-                preload.getMedia("rotateMusic", "aud").play();
-                _selected.rotate(false);
-            } else if(e.keyCode === 68) {
-                preload.getMedia("rotateMusic", "aud").play();
-                _selected.rotate(true);
-            }
-        }
-    });
+    https://tetris.com/assets/images/favicon/apple-icon-180x180.png
 
-    Launcher({width: innerWidth, height:innerHeight, theme:"dark", timeOut:1})
-    .then(e => {
-        Utils.$("#preloader").innerHTML = "Loading...";
-        Utils.$("#about").addEventListener("click", () => {
-            alert("Tetris Game written by Mirielle S.\n\nTo control active blocks, Swipe [LEFT/RIGHT/DOWN] or press the Arrow Keys.\n\nTo Rotate active block, Swipe [UP] OR press the keys [A,D]");
-        });
-        preload.load().then(e => {
-            Utils.$("#preloader").innerHTML = "Press Play";
-            Utils.$("#play").addEventListener("click", () => {
-                // preload.getMedia("bgMusic", "aud").play();
-                game.start();
-           });
-        }).catch(e => {
-            Utils.$("#preloader").innerHTML = "Something Went Wrong";
-        });
-    }).catch(() => console.log("Launcher: Something went wrong"));
+    console.log("new");
 
-}
-
-addEventListener("load", init);
+});

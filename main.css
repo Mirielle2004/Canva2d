@@ -1,4 +1,4 @@
-* {font-family: cursive}
+* {font-family: verdana}
 
 body {
     margin: 0;
@@ -24,12 +24,12 @@ body {
 #start-screen {
     color: antiquewhite;
     width: 90vw;
-    height: 50vh;
+    height: 80vh;
     z-index: 1;
-    background-color: saddlebrown;
-    background-image: linear-gradient(to left, purple, brown);
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 2px solid lightgray;
     position: absolute;
-    top: calc(50vh/2 - 10vh);
+    top: calc(50vh/2 - 20vh);
     left: calc(5vw);
     border-radius: 40px;
     box-shadow: 5px 5px 5px 5px rgba(0, 0, 0, 0.5);
@@ -39,13 +39,24 @@ body {
 button {
     margin: 10px;
     padding: 10px;
-    width: 60px;
+    width: 100px;
     height: 60px;
     font-weight: bolder;
     border-radius: 10px;
     outline: none;
     border: none;
     transition: 1s;
+    color: lightgray;
+}
+
+#play {
+    background-color: green;
+    border: 2px solid lightgray;
+}
+
+#about {
+    background-color: silver;
+    color: #222;
 }
 
 button:hover{
