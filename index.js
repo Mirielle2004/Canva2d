@@ -445,7 +445,7 @@ const init = () => {
         }
     });
 
-    Launcher({width: innerWidth, height:innerHeight, theme:"dark", timeOut:1})
+    Launcher({width: innerWidth, height:innerHeight, theme:"dark", timeOut:1000})
     .then(e => {
         Utils.$("#preloader").innerHTML = "Loading...";
         Utils.$("#about").addEventListener("click", () => {
