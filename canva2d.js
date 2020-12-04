@@ -485,7 +485,7 @@ const Utils = {
         ctx.textBaseline = "middle";
         ctx.font = `bold ${fontSize}px ${fontFamily}`;
         ctx.fillStyle = config.theme === "dark" ? "dimgray" : "#fff";
-        ctx.fillText("Bat Games", config.width/2, config.height/2 - 20);
+        ctx.fillText("Canva2D", config.width/2, config.height/2 - 20);
         // bat description
         ctx.font = `bold ${fontSize - (fontSize-10)}px ${fontFamily}`;
         ctx.fillStyle = "red";
