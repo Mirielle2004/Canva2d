@@ -35,7 +35,7 @@ const Canva2D = (function() {
         API: {
             author: "CodeBreaker",
             date: "18th Dec. 2020",
-            version: "v0.0.13-alpha",
+            version: "v0.0.14-alpha",
         },
         getAPI() {
             return this.API;
@@ -1337,8 +1337,8 @@ Canva2D.API.JoyStick = (function(type="default", config={}) {
                         API.onStart();
                 }
             } else {
-                canvas.style.left = `${e.clientX - _config.outerRadius}px`;
-                canvas.style.top = `${e.clientY - _config.outerRadius}px`;
+                canvas.style.left = `${e.touches[0].pageX - _config.outerRadius}px`;
+                canvas.style.top = `${e.touches[0].pageY - _config.outerRadius}px`;
                 API.isActive = true;
                 display = true;
                 isFading = false;
@@ -1375,7 +1375,7 @@ Canva2D.API.JoyStick = (function(type="default", config={}) {
                     API.onDrag();
             }
             e.preventDefault();
-        });
+        }, {passive:false});
 
         addEventListener("touchend", e => {
             let origin = Vector2.createFrom(

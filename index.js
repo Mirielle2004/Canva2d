@@ -504,4 +504,6 @@ Game Over when you have -1 trial left`);
     
 };
 
-addEventListener("load", main);
+addEventListener("load", () => {
+    
+});
