@@ -1,73 +1,60 @@
-* {font-family: verdana}
-
 body {
     margin: 0;
     position: fixed;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
-#author {
-    text-align: center;
-    color: lightgray;
+#info {
+    position: absolute;
     width: 100vw;
-    height: 90px;
-    background-color: blueviolet;
-    position: absolute;
-    bottom: 0;
-}
-
-#author > img {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-}
-
-#start-screen {
-    color: antiquewhite;
-    width: 90vw;
-    height: 80vh;
-    z-index: 1;
-    background-color: rgba(0, 0, 0, 0.5);
-    border: 2px solid lightgray;
-    position: absolute;
-    top: calc(50vh/2 - 20vh);
-    left: calc(5vw);
-    border-radius: 40px;
-    box-shadow: 5px 5px 5px 5px rgba(0, 0, 0, 0.5);
-    text-align: center;
+    height: 8vh;
+    background-color: rgba(0, 0, 0, .5);
+    display: flex;
+    align-items: center;
+    padding: 2vh;
+    color: lightgray;
 }
 
 button {
-    margin: 10px;
-    padding: 10px;
-    width: 100px;
-    height: 60px;
-    font-weight: bolder;
-    border-radius: 10px;
     outline: none;
     border: none;
-    transition: 1s;
+    width: 90px;
+    height: 90px;
+    border-radius: 10px;
+    background-color: teal;
     color: lightgray;
 }
 
-#play {
-    background-color: green;
-    border: 2px solid lightgray;
+#info > * {
+    margin-right: 5vw;
 }
 
-#about {
-    background-color: silver;
+#info > button {
+    background: none;
+    color: lightgray;
+    border: 2px solid lightgray;
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+    transition: 1s;
+}
+
+#info > button:hover {
+    background-color: lightgray;
     color: #222;
 }
 
-button:hover{
-    background-color: purple;
-    color: lightgray;
-    transform: scale(2);
-    border: 2px solid lightgray;
-}
-
-#gameData {
+#startScreen {
     width: 100vw;
     height: 100vh;
-    background-color: red;
+    background-color: rgba(0, 0, 0, .8);
+    position: absolute;
+    color: lightblue;
+    display: flex;
+    justify-content: center;
+}
+
+#title {
+    font-size: 20vh;
 }

@@ -6,44 +6,27 @@
     <!--CSS-->
     <link rel="stylesheet" href="main.css"> 
     <!-- core -->
-    <script src="lib/core/core.js"></script>
-    <script src="lib/core/launcher.js"></script>
-    <script src="lib/core/preloader.js"></script>
-    <script src="lib/core/scene.js"></script>
-    <!--Maths-->
-    <script src="lib/maths/vector2.js"></script>
-    <script src="lib/maths/vector3.js"></script>
-    <script src="lib/maths/mat3x3.js"></script>
-    <script src="lib/maths/mat4x4.js"></script>
-    <!--component-->
-    <script src="lib/components/basic.js"></script>
-    <script src="lib/components/tile.js"></script>
-    <script src="lib/components/sprite.js"></script>
-    <script src="lib/components/components.js"></script>
-    <!--physics-->
-    <script src="lib/physics/collision2D.js"></script>
-    <!--tile-->
-    <script src="lib/tiled/tilemap.js"></script>
-    <script src="lib/tiled/tilecam.js"></script>
-    <!--controls-->
-    <script src="lib/controls/swipe.js"></script>
-    <script src="lib/controls/joystick.js"></script>
-    <!--    <script src="https://cdn.jsdelivr.net/gh/Mirielle2004/Canva2d@v0.0.6-alpha/canva2d.js"></script>-->
+
+    <!--    <script src="https://cdn.jsdelivr.net/gh/Mirielle2004/Canva2d@v0.0.11-alpha/canva2d.js"></script>-->
+    <script src="canva2d.js"></script>
     <script src="index.js"></script>
-    <title>Canva2d.js Library | Tetris[Game]</title>
+    <title>Canva2d.js Library | webgl game</title>
 </head>
 <body>
-    <section id='author' onclick="window.open('')">
-        Created by Mirielle<br>
-        <img src="https://api.sololearn.com/Uploads/Avatars/12846572.jpg">
+    <section id="info">
+        <button id="restart">Restart</button>
+        <p id="level"></p>
+        <p id="trial"></p>
     </section>
-    <section id="start-screen">
-        <img src="example/img/tetris.png">
-        <h2 style="color:red" id="gOver"></h2>
-        <button id="play">Play</button><br>
-        <button id="about">About</button>
-        <p id="preloader"></p>
-        <p><b>Swipe</b> or press the <b>Arrow/[A,D]</b> keys to control Tetriminos</p>
+    <section id="startScreen">
+        <div id="content" style="text-align: center;">
+            <h1 id="title">A - B</h1><br>
+            <p>A simple strategy puzzle game</p>
+            <button id="play">Play</button>
+            <button id="about">About</button>
+            <br>
+            <p id="txt"></p>
+        </div>
     </section>
 </body>
 </html>

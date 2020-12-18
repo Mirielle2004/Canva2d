@@ -1,467 +1,507 @@
-let ctx, TSB, gSwipe;
+let g, ctx, scene, ball, walls, levelInfo, currentLevel;
+let jsVel, jsRot;
 
-// Tetrominos common buffers
-const TETROMINOS_STATIC_BUFFER = {
-    index: new Vector2(10,21),
-    screen: null,
-    active: [],
-    nextPiece: [],
-    array: [],
-    graphic: {
-        stroke: "#222",
-        fill: "black",
-        array:[],
-        tetriminos:[[[1,1],[1,1]], [[0,1,0],[0,1,0],[1,1,0]],[[0,1,0],[0,1,1],[0,1,0]],[[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]],[[0,1,0],[0,1,0],[0,1,1]],[[1,1,0],[0,1,1],[0,0,0]],[[0,1,1],[1,1,0],[0,0,0]]]
-    },
-    initArray() {
-        for(let i=0; i < this.index.y; i++) {
-            this.array.push(new Array(this.index.x).fill(0));
-            this.graphic.array.push(new Array(this.index.x).fill(0));
-        }
-    },
-    init() {
-        let size = ~~(innerWidth / 15);
-        this.tileS = size;
-        this.tileSize = size;
-        this.index.y = ~~((innerHeight - 100) / size);
-        this.screen = Vector2.createFrom(this.index).scale(this.tileSize);
-        this.initArray();
-    }
+const {min, max, sin, cos, ceil} = Math;
+
+// physics parameters decorator's info for the ball
+let ballPhysicsDecorator = {
+    velocity: {x:null, y:null}, 
+    acceleration: {x:0, y:null},
+    rotation:0,
+    mass: 5,
+    speed: 0,
 };
 
+// setup the game
+const setup = {
+    isPlaying: false, 
 
-const game = {
-    level: null,
-    cleared: null,
-    score: null,
-    interval: null,
-    isPlaying: false,
-    startTime: null,
-    isOver: null,
-    scores: new Set(),
-    highScore: 0,
-    over() {
-        this.isOver = true;
-        this.isPlaying = false;
-        Utils.$("#preloader").innerHTML = "";
-        Utils.$("#gOver").innerHTML = "Game Over";
-        Utils.$("#start-screen").style.display = "block";
-    },
     start() {
-        if(!this.isPlaying) {
-            TSB.array = [];
-            TSB.graphic.array = [];
-            TSB.active = [];
-            TSB.nextPiece = [];
-            TSB.initArray();
-            this.level = 0;
-            this.cleared = 0;
-            this.scores.add(this.score);
-            this.score = 0;
-            this.interval = 1000;
-            this.isOver = false;
-            Utils.$("#gOver").innerHTML = "";
-            Utils.$("#start-screen").style.display = "none";
-            this.startTime = new Date().getTime();
-            TetriMinos.create();
-            this.isPlaying = true;
-        }
-    }
-};
-
-console.log = () => {};
-console.error = () => {};
-onerror = () => {};
-
-// get random numbers between min - max, useful for getting the start location for a new Tetriminos
-const max_min = (max, min) => Math.floor(Math.random() * (max - min + 1) + min);
-
-
-// Principal class For the Tetriminos
-class TetriMinos {
-
-    // create a new Tetriminos
-    static create() {
-        let color = ["red", "green", "blue", "teal"];
-        let go = TSB.nextPiece.length < 1 ? 2 : 1;
-        for(let i=0; i < go; i++) {
-            let tet = new TetriMinos([0,0], Utils.randFromArray(color));
-            tet.pos = Vector2.createFrom({
-                x: max_min(TSB.index.x - tet._tetriminos.length, tet._tetriminos.length),
-                y: 0
-            });    
-            TSB.nextPiece.push(tet);
-        };
-        
-        let tet = TSB.nextPiece.shift();
-        tet.pos.y = 0;
-        let hasCollided = false;
-        for(let i=0; i < tet._tetriminos.length; i++) {
-            for(let j=0; j < tet._tetriminos[i].length; j++) {
-                let pos = {x: ~~(tet.pos.x + j), y:~~(tet.pos.y+i)};
-                if(TSB.array[pos.y][pos.x] !== 0) {
-                    hasCollided = true;
-                }
-            }
-        };
-        if(hasCollided) {
-            TSB.active.push(tet);
-            game.over();
-        } else {
-            tet._startTime = new Date().getTime();
-            TSB.active.push(tet);
-        };
-    }
-    
-    static draw(pos, color, type="fill", _ctx=ctx, size=null, _grd=false) {
-        if(type === 'fill') {
-            let grd = _ctx.createRadialGradient(pos.x + TSB.tileS/2, pos.y + TSB.tileS/2, 0, pos.x, pos.y, TSB.tileS);
-            grd.addColorStop(0, "lightgray");
-            grd.addColorStop(1, color);
-            _ctx.fillStyle = _grd ? grd : color;
-            if(size !== null) _ctx.fillRect(pos.x, pos.y, size, size);
-            else _ctx.fillRect(pos.x, pos.y, TSB.tileS, TSB.tileS);
-        } else {
-            _ctx.strokeStyle = color;
-            if(size !== null) _ctx.strokeRect(pos.x, pos.y, size, size);
-            else _ctx.strokeRect(pos.x, pos.y, TSB.tileS, TSB.tileS);
-        }
-    }
-    
-    constructor(pos, color) {
-        this.pos = Vector2.createFrom(pos);
-        this._tetriminos = Utils.randFromArray(TSB.graphic.tetriminos);
-        this._color = color;
-        this._dimension = Vector2.createFrom(
-        [this._tetriminos.length, this._tetriminos.length]
-        ).scale(TSB.tileS);
-        
-        this.tiles = this.createTile(this._tetriminos);
-        
-        this._startTime = new Date().getTime();
-    }
-    
-    createTile(tetriminos) {
-        // create tile-pos;
-        let res = [];
-        for(let r=0; r < tetriminos.length; r++) {
-            for(let c=0; c < tetriminos[r].length; c++) {
-                let id = tetriminos[r][c];
-                let pos = new Vector2(c, r).scale(TSB.tileS);
-                if(id === 1) 
-                    res.push(pos);
-            }
-        }
-        return res;
-    }
-    
-    draw() {
-        let translated = this.pos.scale(TSB.tileS);  
-        ctx.save();
-        ctx.translate(translated.x, translated.y);
-        this.tiles.forEach(pos => {
-            TetriMinos.draw(pos, this._color, "fill", ctx, TSB.tileS, true);
-            TetriMinos.draw(pos, TSB.graphic.stroke, "stroke");
+        this.influencer = [];       // array of speed influencers
+        this.walls = [];            // array container walls rasteriser
+        this.points = [];           // array of destination point
+        this.capsules = [];         // array of wall's components position
+        this.trial = 3 + currentLevel*2;   // trial count
+        this.slowElapsed = 0;       // waiting counter if ball stop by speed reducer
+        this.isPlaying = true;
+        let cLevel = levelInfo.find(i => i.id === currentLevel);
+        // position the player
+        ball.velocity = new g.Vector2();
+        ball.pos = g.Vector2.createFrom(cLevel.pos);
+        // draw walls
+        cLevel.walls.forEach(data => {
+            new Capsule([data.x, data.y], Math.degToRad(data.a), 
+                data.c, data.r, data.l);
         });
-        ctx.restore();
-    }
-    
-    rotate(clockwise=true) {
-        let array = this._tetriminos;
-        let rotatedArray = [];
-        for(let r=0; r < array.length; r++) {
-            rotatedArray.push([]);
-            for(let c=0; c < array[r].length; c++) {
-                let newVal = clockwise ? array[array.length-c-1][r]:array[c][array[c].length-1-r];
-                rotatedArray[r].push(newVal);
-            }
-        }
-        
-        let oldTetriminos = this._tetriminos;
-        let oldTiles = this.tiles;
-        let newTetriminos = rotatedArray;
-        let newTiles = this.createTile(newTetriminos);
-        
-        // rotate tiles and push their coords to a buffer
-        let ROTATED_BUFFER = [];
-        for(let i=0; i < newTiles.length; i++) {
-            let oldPos = this.pos.scale(TSB.tileS).add(newTiles[i])
-            ROTATED_BUFFER.push(oldPos);
-        };
-        
-        // check for the index of each rotated buffer in the TSB array
-        let collisionBuffer = [[],[]];
-        for(let i=0; i < ROTATED_BUFFER.length; i++) {
-            let newPos = ROTATED_BUFFER[i];
-            let index = TileMap.indexAt(newPos, [TSB.tileS,TSB.tileS]);
-            let value = TileMap.getId(TSB.array, index);
-            collisionBuffer[0].push(index);
-            collisionBuffer[1].push(value);
-            
-        };
-        // do not rotate if any rotated tiles is not in the visible area of the tile game
-        if(ROTATED_BUFFER.some(i => i.x < 0 || i.x > TSB.tileS * (TSB.index.x -1) || i.y < 0 || i.y > TSB.tileS * (TSB.index.y - 1)) || collisionBuffer[1].some(i => i !== 0)) {
-            newTetriminos = oldTetriminos;
-            newTiles = oldTiles;
-        };
-        
-        this._tetriminos = newTetriminos;
-        this.tiles = newTiles;
-    }
-    
-    // this method checks if a tile has reached it's destination in the TSB array then set it's index to 1 and also save it's graphics color to the TSB.graphics.array and delete their tetriminos
-    save() {
-        for(let r=0; r < this._tetriminos.length; r++) {
-            for(let c=0; c < this._tetriminos[r].length; c++) {
-                let id = TileMap.getId(this._tetriminos, [c, r]);
-                if(id === 1) {
-                    let p = [this.pos.x + c,this.pos.y + r];
-                    TileMap.setId(TSB.array, p, TSB.index.x, 1);
-                    TileMap.setId(TSB.graphic.array, p, TSB.index.x, this._color);
-                }
-            }
-        }
-         TSB.active.splice(TSB.active.indexOf(this), 1);
-    }
-    
-    update(currentTime) {
-        let _this = this;
-        TetriminosMove("down", this, {
-            free() {
-                if(Math.abs(currentTime - _this._startTime) >= game.interval - (game.level * 20)) {
-                    _this.pos.y++;
-                    _this._startTime = currentTime;
-                }
-            },
-            block() {
-                if(!game.isOver) {
-                    _this.save();
-                    TetriMinos.create();
-                };
+        // draw speed iinfluencers
+        cLevel.influencer.forEach(data => {
+            for(const [type, pos] of Object.entries(data)) {
+                pos.forEach(p => {
+                    let influencer = new Speedinfluencer(type, p);
+                    this.influencer.push(influencer);
+                });
             }
         });
-        this.draw();
-    }
-    
-};
-
-
-/** checks for each Tetriminos collision using the INVERSE COLLISION method
-* The logic behind this is to filter every block in the tetriminos array and convert their indexes to screen space
-then from screen space to their coordinate in the TSB array,
-if the nextLocation of any tile in the filtered tetrominos is not 0, then collision has occur and they should stop right there
-*/
-const commonCheck = (tiles, tetriminos, colArray, _newPos) => {
-    let collisionBuffer = [[],[],[],[]];
-    for(let i=0; i < tiles.length; i++) {
-        let currentPos = tetriminos.pos.scale(TSB.tileS).add(tiles[i]);
-        let newPos = _newPos.add(tiles[i]);
-        let index = new Vector2(~~(newPos.x/TSB.tileS), ~~(newPos.y/TSB.tileS));
-        let value = colArray[Math.min(TSB.index.y-1, index.y)][index.x];
-        collisionBuffer[0].push(currentPos);
-        collisionBuffer[1].push(newPos);
-        collisionBuffer[2].push(index);
-        collisionBuffer[3].push(value);
-            
-    }
-    return collisionBuffer;
-};
-
-const TetriminosMove = (dir, tetriminos, callback={}) => {
-    let TSB = TETROMINOS_STATIC_BUFFER;
-    let tiles = tetriminos.tiles;
-    let colArray = TSB.array;
-    
-    if(dir === "left") {
-        let collision = commonCheck(tiles, tetriminos, colArray, tetriminos.pos.scale(TSB.tileS).add([-TSB.tileS, 0]));
-        if(collision[3].every(i => i === 0)) tetriminos.pos.x--;
-    } else if(dir === "right") {
-        let collision = commonCheck(tiles, tetriminos, colArray, tetriminos.pos.scale(TSB.tileS).add([TSB.tileS, 0]));
-        if(collision[3].every(i => i === 0)) tetriminos.pos.x++;
-    } else if(dir === "down") {
-        let collision = commonCheck(tiles, tetriminos, colArray, tetriminos.pos.scale(TSB.tileS).add([0, TSB.tileS]));
-        if(collision[3].every(i => i === 0) && collision[2].every(i => i.y <= TSB.index.y-1)) {
-            if(typeof callback.free === "function")         callback.free();
-            else tetriminos.pos.y++;
-        } else {
-            if(typeof callback.block === "function")
-                callback.block();
+        // draw destination points
+        cLevel.points.forEach(p => {
+            let size = Math.random() * ball.r/2 + ball.r/2;
+            let circle = new g.Component.Shape("circle", p, size);
+            this.points.push(circle);
+        });
+        // show level
+        g.Utils.$("#level").innerHTML = `Level: ${currentLevel}`;
+    },
+    // this function is called when game over
+    over() {
+        this.isPlaying = false;
+        ball.speed = 0;
+        ball.velocity = new g.Vector2();
+        g.Utils.$("#startScreen").css({display:"block"});
+        g.Utils.$("#startScreen").css({display:"flex"});
+        g.Utils.$("#txt").innerHTML = "GameOver";
+        g.Utils.$("#txt").css({color:"red"});
+    },
+    // handy function to draw fill and/or filled-stroke circle
+    drawArc(p, r, color, stroke=false, strokeColor) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, 2*Math.PI);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+        if(stroke) {
+            ctx.strokeStyle = strokeColor;
+            ctx.stroke();
         }
     }
 };
 
-
-function bgUpdate() {
-    let ctx = this.getContext();
+/**
+ * @function Capsule
+ * @description creates a capsule like graphics representing
+ * the wall. The capsule is composed of various circles binded 
+ * together in a rectangle, collision between the capsule and the 
+ * player(ball) is that of an elastic in respect to the ball.
+ * 
+ * creating a capsule involves creating a n* circles across a n-angle
+ * but just the first and the last circles are drawn. other circles 
+ * between are represented as a line orthogonal and scaled by the
+ * half of their radius
+ * 
+ * @param {Vector2} pos starting position of the wall
+ * @param {Number} angle angle formed by the wall
+ * @param {String} color color of the wall
+ * @param {Number} radius radius of each circles in the wall
+ * @param {Number} length length of the wall
+ * @returns {Capsule} a capsule representing the walls
+ */
+const Capsule = (function(pos, angle, color, radius=50, length=5) {
     
-    let TSB = TETROMINOS_STATIC_BUFFER;
-    ctx.strokeStyle = 'teal';
-    ctx.strokeRect(0, 0, TSB.screen.x, TSB.screen.y);
-    for(let i=0; i < TSB.index.y; i++) {
-        for(let j=0; j < TSB.index.x; j++) {
-            let id = TSB.array[i][j];
-            let pos = new Vector2(j, i).scale(TSB.tileSize);
-            if(id === 1) {
-                TetriMinos.draw(pos, TSB.graphic.array[i][j], "fill", ctx, TSB.tileS, true);
-                TetriMinos.draw(pos, TSB.graphic.stroke, "stroke", ctx);
-            }
-        }
+    let startPos = new g.Vector2(...pos);
+    let circles = [];
+    let spacing = 0;
+
+    for(let i=0; i < length; i++) {
+        let rot = new g.Vector2(Math.cos(angle), Math.sin(
+            angle)).scale(spacing);
+        let pos = startPos.add(rot);
+        let circle = new g.Component.Shape("circle", pos, radius/2);
+        circles.push(circle);
+        setup.capsules.push(circle);
+        spacing += radius;
     };
-    // filled blocks
-    let _filled = TSB.array.filter(i => i.every(j => j === 1));
+
+    let diffPos = circles[length-1].pos.sub(startPos);
+    let [normalUp, normalDown] = [[], []];
+
+    circles.forEach(circle => {
+        // we get two normal vector to each circles position
+        let cross = diffPos.cross();
+        let angU = new g.Vector2(diffPos.y, -diffPos.x);
+        let angD =new g.Vector2(-diffPos.y, diffPos.x);
+        let normal1 = circle.pos.add(angU.normalise().scale(radius/2));
+        let normal2 = circle.pos.add(angD.normalise().scale(radius/2));
+        normalUp.push(normal1);
+        normalDown.push(normal2);
+    });
+    // need to be reversed else the line will be drawn as a X-shape instead of a rect
+    let shouldReverse = g.Utils.randFromArray([true, false]);
+    normalDown = shouldReverse ? normalDown.reverse() : normalDown;
+
+    const createGradient = () => {
+        let middle = ceil(circles.length/2);
+        let circle = circles[middle - 1].pos;
+        let grd = ctx.createRadialGradient(circle.x, circle.y, 
+            0, circle.x, circle.y, radius * length);
+        grd.addColorStop(0, "lightgray");
+        grd.addColorStop(1, color);
+        return grd;
+    };
+
+    class Capsule {
+        constructor() {
+            setup.walls.push(this);
+        }
     
-    if(_filled.length !== 0) {
-        let _filledDel = [];
-    
-        for(let r=0; r < TSB.index.y; r++) {
-            let current = TSB.array[r];
-            if(current.every(i => i !== 0)) {
-                _filledDel.push(r);
-            }
-        };
+        draw() {
+            let grd1 = createGradient(circles[0].pos);
+            let grd2 = createGradient(circles[length-1].pos);
+            // let grd1 = "red";
+            ctx.save();
+            setup.drawArc(circles[0].pos, circles[0].r, grd1, true, color);
+            setup.drawArc(circles[length-1].pos, circles[length-1].r, grd2, true, color);
+            ctx.beginPath();
+            ctx.moveTo(normalUp[0].x, normalUp[0].y);
+            for(let i=1; i < normalUp.length; i++)
+                ctx.lineTo(normalUp[i].x, normalUp[i].y);
+            normalDown.forEach(i => ctx.lineTo(i.x, i.y));
+            ctx.fillStyle = createGradient(circles[3].pos);
+            ctx.fill();
+            ctx.closePath();
+            ctx.restore();
+        }
+    }
+
+    return new Capsule();
+});
+
+
+/**
+ * @function bounceWall
+ * @description describe ball behavior when it collides with a wall
+ * @param {Capsule} wall representing the wall
+ */
+function bounceWall (wall) {
+
+    let velDiff = this.velocity.sub(wall.velocity);
+    let vecDiff = wall.pos.sub(this.pos);
+
+    if(vecDiff.dot(velDiff) >= 0) {
+        let angle = -Math.atan2(vecDiff.y, vecDiff.x);
+
+        const m1 = this.mass;  
+        const m2 = wall.mass;
+
+        let rotMat = g.Mat3x3.makeRotate(angle);
+        let rotMatu1 = rotMat.multiplyVec(this.velocity.toArray());
+        let rotMatu2 = rotMat.multiplyVec(wall.velocity.toArray());
+        const u1 = new g.Vector2(...rotMatu1);
+        const u2 = new g.Vector2(...rotMatu2);
+
+        const v1 = { x:(((m1 - m2) * u1.x) / (m1 + m2)) + ((2 * m2) * u2.x) / (m1 + m2),
+            y: u1.y};
+        const v2 = {x:(((2 * m1)*u1.x) / (m1 + m2)) + (((m2 - m1) * u2.x) / (m1 + m2)), 
+            y: u2.y};
         
-        for(let i=0; i < _filledDel.length; i++) {
-            TSB.array.splice(_filledDel[i], 1);
-            TSB.graphic.array.splice(_filledDel[i], 1);
-            TSB.array.unshift(new Array(TSB.index.x).fill(0));
-            TSB.graphic.array.unshift(new Array(TSB.index.x).fill(0));
-        }
-        game.cleared += _filledDel.length;
-    };
-    game.score = TSB.array.flat().filter(i => i !== 0).length + (game.cleared * TSB.index.x);
-};
+        rotMat = g.Mat3x3.makeRotate(-angle);
+        let rotMatv1 = rotMat.multiplyVec([v1.x, v1.y, 1]);
+        let rotMatv2 = rotMat.multiplyVec([v2.x, v2.y, 1]);
 
-
-function gameUpdate() {
-    
-    if(Math.abs(this.currentTime - game.startTime) >= 1000)
-        TSB.active.forEach(t => t.update(this.currentTime));
-    
-    
-    ctx.strokeStyle = "teal";
-    let rect = {
-        x: TSB.screen.x + TSB.tileS,
-        y: innerHeight/2 + TSB.tileS,
-        w: TSB.tileS * 3
-    };
-    ctx.strokeRect(rect.x, rect.y - rect.w, rect.w, rect.w);
-    for(let i=0; i < 6; i++) {
-        for(let j=0; j < 6; j++) {
-            let pos = {x: rect.x + j * TSB.tileS/2, y: rect.y + i * TSB.tileS/2 - rect.w};
-            TetriMinos.draw(pos, TSB.graphic.fill, "fill", ctx, TSB.tileS/2);
-        }
+        this.velocity = g.Vector2.createFrom(rotMatv1);
+        wall.velocity = new g.Vector2();
+        this.rotation = this.velocity.angle;
     }
-    
-    if(TSB.nextPiece.length !== 0) {
-        let nextPiece = TSB.nextPiece[0];
-        for(let i=0; i < nextPiece._tetriminos.length; i++) {
-            for(let j=0; j < nextPiece._tetriminos[i].length; j++) {
-                let id = TileMap.getId(nextPiece._tetriminos, [j,i]);
-                if(id === 1) {
-                    let pos = {
-                        x: ~~(rect.x + j * TSB.tileS/2) + rect.w/2 - TSB.tileS/2, 
-                        y: ~~(rect.y + i * TSB.tileS/2 - rect.w) + rect.w/2 - TSB.tileS/2
-                    };
-                    TetriMinos.draw(pos, nextPiece._color, "fill", ctx, TSB.tileS/2);
-                    TetriMinos.draw(pos, TSB.graphic.stroke, "stroke", ctx, TSB.tileS/2);
-                }
-            }
-        }
-    }
-    
-    game.level = ~~(game.cleared / 10);
-    
-    text("Next Piece", {x:rect.x + rect.w/2, y:rect.y + 30}, 'bold 15px Verdana', "dimgray");
-    text(`Score: `+game.score, {x:rect.x + rect.w/2, y:30}, 'bold 15px Verdana', 'dimgray');
-    text(`Cleared: `+game.cleared, {x:rect.x + rect.w/2, y:60}, 'bold 15px Verdana', 'dimgray');
-    text(`Level: `+game.level, {x:rect.x + rect.w/2, y:90}, 'bold 20px Verdana', 'dimgray');
-    
-};
+}
 
-const text = (txt, p, font, color, _ctx=ctx) => {
-    _ctx.fillStyle = color;
-    _ctx.font = font;
-    _ctx.textAlign = "center";
-    _ctx.textBaseline = "middle";
-    _ctx.fillText(txt, p.x, p.y);
-};
+// game Loop
+function gameLoop() {
 
-function swipeControl() {
-    if(game.isPlaying) {
-        let _selected = TSB.active[0];
-        let dir = this.data.direction;
-        if(dir === 'up') {
-            // preload.getMedia("rotateMusic", "aud").play();
-            _selected.rotate();
-        } else TetriminosMove(dir, _selected);
-    }
-};
+    ctx = this.getContext("2d");
+    let dt = this.getFelapsedTimePS();
+    ctx.clearRect(0, 0, this.getWidth(), this.getHeight());
 
+    setup.influencer.forEach(i => i.update());
 
-let preload = new Preloader([
-    {src:"example/img/block.png", name:"block"},
-    {src:"example/french.mp3", name:"rotateMusic"},
-    {src:"example/french.mp3", name:"bgMusic"},
-]);
-
-
-const init = () => {
-
-    TSB = TETROMINOS_STATIC_BUFFER;
-    TSB.init();
-    
-    let bgScene = new Scene(innerWidth, innerHeight, true);
-    bgScene.css({backgroundColor:TSB.graphic.fill});
-    bgScene.update = bgUpdate;
-    bgScene.start();
-    
-    let scene = new Scene(innerWidth, innerHeight, true);
-    scene.css({position: "absolute",left: "0"});
-    ctx = scene.getContext();
-    scene.update = gameUpdate;
-    scene.start();
-    
-    gSwipe = new Swipe(scene.getScene(), "mouse");
-    gSwipe.onSwipeMove = swipeControl;
-
-    addEventListener("keydown", e => {
-        if(game.isPlaying) {
-            let _selected = TSB.active[0];
-            if(e.keyCode === 37)
-                TetriminosMove("left", _selected);
-            else if (e.keyCode === 39)
-                TetriminosMove("right", _selected);
-            else if(e.keyCode === 38)
-                _selected.rotate(true);
-            else if(e.keyCode === 40)
-                TetriminosMove("down", _selected);
-            else if(e.keyCode === 65) {
-                preload.getMedia("rotateMusic", "aud").play();
-                _selected.rotate(false);
-            } else if(e.keyCode === 68) {
-                preload.getMedia("rotateMusic", "aud").play();
-                _selected.rotate(true);
-            }
+    setup.capsules.forEach(circle => {
+        let dist = ball.pos.sub(circle.pos);
+        if(dist.length <= ball.r + circle.r) {
+            circle.mass = 50;
+            circle.velocity = new g.Vector2(0,0);
+            ball.bounceWall(circle);
         }
     });
 
-    Launcher({width: innerWidth, height:innerHeight, theme:"dark", timeOut:1000})
-    .then(e => {
-        Utils.$("#preloader").innerHTML = "Loading...";
-        Utils.$("#about").addEventListener("click", () => {
-            alert("Tetris Game written by Mirielle S.\n\nTo control active blocks, Swipe [LEFT/RIGHT/DOWN] or press the Arrow Keys.\n\nTo Rotate active block, Swipe [UP] OR press the keys [A,D]");
-        });
-        preload.load().then(e => {
-            Utils.$("#preloader").innerHTML = "Press Play";
-            Utils.$("#play").addEventListener("click", () => {
-                // preload.getMedia("bgMusic", "aud").play();
-                game.start();
-           });
-        }).catch(e => {
-            Utils.$("#preloader").innerHTML = "Something Went Wrong";
-        });
-    }).catch(() => console.log("Launcher: Something went wrong"));
+    setup.walls.forEach(wall => wall.draw());
 
-}
+    setup.points.forEach((p, i) => {
+        let dist = ball.pos.sub(p.pos).length;
+        if(dist <= p.r + ball.r) {
+            setup.points.splice(i, 1);
+        }
+        setup.drawArc(p.pos, p.r, "#fff", true, "yellow");
+    });
 
-addEventListener("load", init);
+    if(setup.points.length === 0) {
+        currentLevel++;
+        ball.speed = 0;
+        ball.velocity = new g.Vector2();
+        setup.start();
+    };
+
+    if(ball.pos.x <= ball.r || ball.pos.x - ball.r >= innerWidth ||
+        ball.pos.y <= ball.r || ball.pos.y - ball.r >= innerHeight) {
+            setup.trial--;
+            ball.speed = 0;
+            let pos = levelInfo.find(i => i.id === currentLevel).pos;
+            ball.pos = g.Vector2.createFrom(pos);
+            ball.velocity = new g.Vector2();
+    }
+
+    if(setup.trial < 0) setup.over();
+
+    // draw the ball
+    ball.acceleration = new g.Vector2(0, 10);
+    if(ball.velocity.y !== 0) {
+        ball.velocity = ball.velocity.add(ball.acceleration);
+    }
+    ball.pos = ball.pos.addScale(ball.velocity, dt);
+
+    let ballGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, ball.r);
+    ballGradient.addColorStop(0, "lightgray");
+    ballGradient.addColorStop(1, "red");
+    ctx.save();
+    ctx.translate(ball.pos.x, ball.pos.y);
+    ctx.rotate(ball.rotation);
+    setup.drawArc({x:0, y:0}, ball.r, ballGradient);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(ball.r, 0);
+    ctx.closePath();
+    ctx.strokeStyle = "yellow";
+    ctx.stroke();
+    ctx.restore();
+
+    g.Utils.$("#trial").innerHTML = `Try: ${setup.trial}`;
+};
+
+
+
+class Speedinfluencer {
+    constructor(type, pos) {
+        // sb - speedBooster
+        // sr - speedReducer
+        this.type =  type;
+        this.pos = g.Vector2.createFrom(pos);
+        this.r = ball.r;
+    }
+
+    draw() {
+        if(this.type === "sb") {
+            setup.drawArc(this.pos, ball.r, "teal");
+            ctx.beginPath();
+            ctx.moveTo(this.pos.x + ball.r/2, this.pos.y - ball.r);
+            ctx.lineTo(this.pos.x - ball.r/2, this.pos.y - ball.r/2);
+            ctx.lineTo(this.pos.x, this.pos.y);
+            ctx.lineTo(this.pos.x - ball.r/2, this.pos.y + ball.r);
+            ctx.lineTo(this.pos.x + ball.r/2, this.pos.y);
+            ctx.lineTo(this.pos.x, this.pos.y - ball.r/2);
+            ctx.closePath();
+            ctx.fillStyle = "#222";
+            ctx.fill();
+        } else if(this.type === "sr") {
+            setup.drawArc(this.pos, ball.r, "yellow");
+            setup.drawArc(this.pos.sub([ball.r/4, 0]), ball.r/1.5, "#222");
+            setup.drawArc(this.pos.add([ball.r/2, 0]), ball.r/3, "#222");
+        }
+    }
+
+    update() {
+        if(g.Collision.circle(this, ball)) {
+            if(this.type === "sr") {
+                setup.slowElapsed++;
+                ball.velocity = ball.velocity.mult([.97, .97]);
+                if(setup.slowElapsed >= 200) {
+                    setup.trial--;
+                    ball.speed = 0;
+                    ball.velocity = new g.Vector2();
+                    let pos = levelInfo.find(i => i.id === currentLevel).pos;
+                    ball.pos = g.Vector2.createFrom(pos);
+                    setup.slowElapsed = 0;
+                }
+            }
+            else if(this.type === "sb") 
+                ball.velocity = ball.velocity.scale(1.2);
+        }
+        this.draw();
+    }
+};
+
+
+addEventListener("keydown", e => {
+    if(setup.isPlaying) {
+        let rotSpeed = .1;
+        if(e.keyCode === 37) {
+            ball.rotation -= rotSpeed;
+        } else if(e.keyCode === 39) {
+            ball.rotation += rotSpeed;
+        } else if(e.keyCode === 32) {
+            if(ball.velocity.x === 0 && ball.velocity.y === 0) {
+                ball.speed += 20;
+            }
+        }
+    }
+});
+
+addEventListener("keyup", e => {
+    if(setup.isPlaying) {
+        if(e.keyCode === 32) {
+            if(ball.velocity.x === 0 && ball.velocity.y === 0) {
+                let angle = ball.rotation;
+                let speed = Math.min(800, ball.speed);
+                ball.velocity.x = Math.cos(angle) * speed;
+                ball.velocity.y = Math.sin(angle) * speed;
+            }
+        };
+    }
+});
+
+
+
+/**
+ * @function createLevel 
+ * @description creates the data for each levels
+ * @param {Number} w client's width size in pixel
+ * @param {Number} h client's height size in pixel
+ * @param {Canva2D.API.Component.Shape} ball a circular shaped object
+ * @returns {Object} all levels data
+ */
+const createLevel = (function(w, h, ball) {
+    return [
+        {
+            id: 1, 
+            points: [[w/2, 100]], 
+            walls: [{x:w/2 + w/3, y:h - ball.r - 30, a:-80, c:"teal", r:20, l:70}, 
+            {x:w - w/3, y:h/2, a:190, c:"red", r:20, l:7}, 
+            {x:w/3, y:h - ball.r - 30, a:-100, c:"teal", r:20, l:30}],
+            pos: [w/2 - ball.r/2, h - ball.r -10],
+            influencer: [{sb:[[w/2 + w/3, h/2 - 100]]}, {sr:[[w/2, 200]]}]
+        }, {
+            id: 2, 
+            points: [[w/2 - ball.r, h/2 + 200 - ball.r * 2], 
+            [w/2 - w/6 - ball.r, 200 - ball.r * 2]], 
+            walls: [{x:w/2 + w/3, y:h - ball.r - 30, a:-80, c:"teal", r:20, l:70}, 
+            {x:w - w/3, y:h/2, a:90, c:"red", r:20, l:7},
+            {x:w - w/3, y:h/2 + 200, a:190, c:"green", r:20, l:7},
+            {x:w , y:100, a:-180, c:"yellow", r:50, l:7},
+            {x:w/3, y:h - ball.r - 30, a:-100, c:"teal", r:20, l:30}],
+            pos: [w/2 + ball.r, h - ball.r -10],
+            influencer: [{sb:[[w/2 + w/3, h/2-10]]}, {sr:[[w/2 + w/3, h/2 - 100], 
+                [w/2, h/2]]}]
+        }, {
+            id: 3, 
+            points: [[w/2 - ball.r, h/2 + 200 - ball.r * 2], 
+            [w/2 - w/6 - ball.r, 200 - ball.r * 2]], 
+            walls: [{x:w/2 + w/3, y:h - ball.r - 30, a:-80, c:"teal", r:20, l:70}, 
+            {x:w - w/3, y:h/2, a:90, c:"red", r:20, l:7},
+            {x:w - w/3, y:h/2 + 200, a:190, c:"green", r:20, l:7},
+            {x:w , y:100, a:-180, c:"purple", r:50, l:7},
+            {x:w/3, y:h - ball.r - 30, a:-100, c:"teal", r:20, l:30}],
+            pos: [w/2 + ball.r, h - ball.r -10],
+            influencer: [{sb:[[w/2 + w/3, h/2-10], [w/2 - w/5, h/2]]}, 
+            {sr:[[w/2 + w/3, h/2 - 100], [w/2, h/2], [w/2, 200 - ball.r * 2]]}]
+        }, {
+            id: 4, 
+            points: [[w/2 - ball.r, h/2 + 200 - ball.r * 2], 
+            [w/2 + w/3, h/2 + h/7]], 
+            walls: [{x:w/2 + w/3, y:h - ball.r - 30, a:-80, c:"teal", r:20, l:70}, 
+            {x:w - w/3, y:h/2, a:90, c:"red", r:20, l:7},
+            {x:w - w/3, y:h/2 + 200, a:-15, c:"green", r:20, l:7},
+            {x:w , y:100, a:-180, c:"yellow", r:50, l:7},
+            {x:w/3, y:h - ball.r - 30, a:-100, c:"teal", r:20, l:30}],
+            pos: [w/2 + ball.r, h - ball.r -10],
+            influencer: [{sb:[[w/2 + w/3, h/2-10], ]}, 
+            {sr:[[w/2 + w/3, h/2 - 100], [w/2, h/2]]}]
+        }, {
+            id: 5, 
+            points: [[w/2 + ball.r + 10, h/2 + ball.r/2  +10], 
+            [w/2 + w/3, h/2 + h/7]], 
+            walls: [{x:w/2 + w/3, y:h - ball.r - 30, a:-80, c:"teal", r:20, l:70}, 
+            {x:w/2, y:h/2, a:90, c:"red", r:20, l:7},
+            {x:-ball.r*2, y:h/2 + 200, a:55, c:"green", r:20, l:7},
+            {x:w , y:100, a:-180, c:"yellow", r:50, l:7},
+            {x:w/3, y:h - ball.r - 50, a:-60, c:"pink", r:20, l:30}],
+            pos: [w/2 + ball.r, h - ball.r -10],
+            influencer: [{sb:[[100, 200], ]}, 
+            {sr:[[w/2 + w/3, h/2 - 100], [100, 300]]}]
+        }];
+});
+
+
+const main = () => {
+
+    g = Canva2D.getAPI();
+    scene = new g.Scene(innerWidth, innerHeight, true);
+    scene.css({backgroundColor:"#000"});
+    ctx = scene.getContext("2d");
+
+    jsVel = g.JoyStick("default", {
+        dynamic: true,
+        outerRadius: 50,
+        pos: {x:50 - 10, y:50 - 10}
+        
+    });
+
+    jsVel.onStart = function() {
+        if(!setup.isPlaying) {
+            this.isActive = false;
+            this.hide();
+        } else {
+            this.show();
+        }
+    }
+
+    jsVel.onDrag = function() {
+        this.show();
+        if(setup.isPlaying) {
+            ball.rotation = this.data.angle;
+            if(ball.velocity.x === 0 && ball.velocity.y === 0) {
+                ball.speed += 20;
+            }
+        }
+    }
+
+    jsVel.onEnd = function() {
+        if(ball.velocity.x === 0 && ball.velocity.y === 0) {
+            let angle = ball.rotation;
+            let speed = Math.min(800, ball.speed);
+            ball.velocity.x = Math.cos(angle) * speed;
+            ball.velocity.y = Math.sin(angle) * speed;
+        }
+    }
+
+    currentLevel = 1;   
+    ball = new g.Component.Shape("circle", [0, 0], 20);
+    ball.bounceWall = bounceWall;
+    levelInfo = createLevel(innerWidth, innerHeight, ball);
+    setup.start();
+    setup.isPlaying = false;
+
+    g.PhysicsDecorator(ball, ballPhysicsDecorator);
+    ball.velocity = new g.Vector2();
+
+    g.Utils.$("#restart").addEventListener("click", ()=>{
+        setup.start()
+    });
+    g.Utils.$("#play").addEventListener("click", () => {
+        g.Utils.$("#startScreen").css({display:"none"});
+        setup.start();
+    });
+    g.Utils.$("#about").addEventListener("click", () => {
+        alert(`INSTRUCTION
+You are expected to move the red ball from it's origin point to their destination point(Every white circle on the screen).
+
+The speed and velocity of the ball is affected by the walls, speed booster(teal colored circle with flash icon),
+speed reducer(yellow colored circle with snail icon) and the invisible gravity.
+
+You are the the N-trial chance to execute your task else game over.
+Trial count reduces if you move the ball offscreen, velocity remanded zero due to the speedReducer.
+
+Game Over when you have -1 trial left`);
+    });
+
+    scene.update = gameLoop;
+    scene.start();
+
+    
+};
+
+addEventListener("load", main);
