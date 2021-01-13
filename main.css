@@ -1,4 +1,6 @@
 body {
     position: fixed;
     margin: 0;
+    user-select: none;
+    -webkit-user-select: none;
 }
